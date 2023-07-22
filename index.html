@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multiple Timers App</title>
+  <style>
+    /* Add your CSS styles here */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    main {
+      padding: 20px;
+    }
+    .timer-input {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .timer-input label {
+      font-weight: bold;
+    }
+    .active-timers {
+      display: grid;
+      gap: 10px;
+    }
+    .timer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px;
+      background-color: #f9f9f9;
+      border-radius: 4px;
+    }
+    .stop-timer-btn {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .timer-ended {
+      background-color: #f5c6cb;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="timer-input">
+      <label for="hours">Hours:</label>
+      <input type="number" id="hours" min="0" max="23" placeholder="0">
+      <label for="minutes">Minutes:</label>
+      <input type="number" id="minutes" min="0" max="59" placeholder="0">
+      <label for="seconds">Seconds:</label>
+      <input type="number" id="seconds" min="0" max="59" placeholder="0">
+      <button id="start-timer-btn">Start New Timer</button>
+    </section>
+    <section class="active-timers" id="active-timers">
+      <!-- Active Timers Display Section will be dynamically generated here -->
+    </section>
+  </main>
+  <audio id="timer-end-alert" src="path/to/audio-file.mp3"></audio>
+  <script>
+    // Helper function to format time as HH:MM:SS
+    function formatTime(hours, minutes, seconds) {
+      return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    // Function to create and start a new timer
+    function startNewTimer(hours, minutes, seconds) {
+      const timeInSeconds = hours * 3600 + minutes * 60 + seconds;
+      const timerId = setInterval(() => {
+        const timerDisplay = document.getElementById(`timer-${timerId}`);
+        if (timeInSeconds > 0) {
+          timeInSeconds--;
+          const remainingHours = Math.floor(timeInSeconds / 3600);
+          const remainingMinutes = Math.floor((timeInSeconds % 3600) / 60);
+          const remainingSeconds = timeInSeconds % 60;
+          timerDisplay.textContent = formatTime(remainingHours, remainingMinutes, remainingSeconds);
+        } else {
+          clearInterval(timerId);
+          timerDisplay.parentElement.classList.add('timer-ended');
+          document.getElementById('timer-end-alert').play();
+        }
+      }, 1000);
+
+      return timerId;
+    }
+
+    // Event listener for 'Start New Timer' button click
+    document.getElementById('start-timer-btn').addEventListener('click', () => {
+      const hoursInput = document.getElementById('hours');
+      const minutesInput = document.getElementById('minutes');
+      const secondsInput = document.getElementById('seconds');
+
+      const hours = parseInt(hoursInput.value) || 0;
+      const minutes = parseInt(minutesInput.value) || 0;
+      const seconds = parseInt(secondsInput.value) || 0;
+
+      if (hours === 0 && minutes === 0 && seconds === 0) {
+        alert('Please enter a valid time.');
+        return;
+      }
+
+      const timerId = startNewTimer(hours, minutes, seconds);
+      const activeTimersDisplay = document.getElementById('active-timers');
+
+      const timerDisplayContainer = document.createElement('div');
+      timerDisplayContainer.classList.add('timer');
+      timerDisplayContainer.innerHTML = `
+        <span>${formatTime(hours, minutes, seconds)}</span>
+        <button class="stop-timer-btn" data-timer-id="${timerId}">Stop Timer</button>
+      `;
+      activeTimersDisplay.appendChild(timerDisplayContainer);
+
+      hoursInput.value = '';
+      minutesInput.value = '';
+      secondsInput.value = '';
+    });
+
+    // Event listener for 'Stop Timer' button click
+    document.addEventListener('click', (event) => {
+      if (event.target.classList.contains('stop-timer-btn')) {
+        const timerId = event.target.dataset.timerId;
+        clearInterval(timerId);
+        event.target.parentElement.remove();
+      }
+    });
+  </script>
+</body>
+</html>
+
